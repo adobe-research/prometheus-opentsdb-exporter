@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/prometheus-opentsdb-exporter.iml" filepath="$PROJECT_DIR$/.idea/modules/prometheus-opentsdb-exporter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/prometheus-opentsdb-exporter-build.iml" filepath="$PROJECT_DIR$/.idea/modules/prometheus-opentsdb-exporter-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/web.iml" filepath="$PROJECT_DIR$/.idea/modules/web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/web-build.iml" filepath="$PROJECT_DIR$/.idea/modules/web-build.iml" />
+    </modules>
+  </component>
+</project>
