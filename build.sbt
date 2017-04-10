@@ -12,7 +12,7 @@ lazy val web = SubProject("web")
   .enablePlugins(PlayScala)
   .settings(
     BuildInfo.settings,
-    libraryDependencies ++= webAppDeps
+    libraryDependencies ++= Seq(ws) ++ webAppDeps
   )
 
 
