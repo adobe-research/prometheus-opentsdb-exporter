@@ -21,6 +21,8 @@ class MetricsRepoService @Inject()(
   private implicit val to: Timeout = 5 seconds
 
   private val metricsDir = configuration.getString("metrics.dir").get
+  private val refreshTime = configuration.getLong("metrics.refreshTime").get
+
   private implicit val ec = system.dispatcher
 
   private def getListOfFiles(dir: String):List[File] = {
@@ -42,7 +44,7 @@ class MetricsRepoService @Inject()(
       }
   }
 
-  system.scheduler.schedule(0 second, 10 second) {
+  system.scheduler.schedule(0 second, refreshTime second) {
     metricsRepo.foreach { mr =>
       Logger.info("Loading metrics definitions.")
 

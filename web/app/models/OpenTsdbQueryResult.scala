@@ -1,5 +1,7 @@
 package models
 
+import scala.util.Try
+
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
@@ -9,17 +11,82 @@ case class DataPoint(
   value: Long
 )
 
+case class PrometheusMetric(
+  name: String,
+  description: String,
+  tags: Map[String, String],
+  value: Long
+)
+
 case class TsdbQueryResult(
   metric: String,
   tags: Map[String, String],
-  dps: Seq[DataPoint]
+  dps: Seq[DataPoint],
+  subQuery: SubQuery
 ) {
-  def result: Long = ???
+  private [this] lazy val latestDataPoint: Option[DataPoint] = Try(dps.maxBy(_.timestamp)).toOption
+
+  def extractResults(metric: Metric): Option[PrometheusMetric] = {
+    for {
+      mapping <- metric.query.mappings.find(_.subQuery == subQuery)
+      tags <- mapping.prometheusTags
+      dp <- latestDataPoint
+    } yield PrometheusMetric(metric.name, metric.description, tags, dp.value)
+  }
 }
 
 object TsdbQueryResult {
-  implicit val tsdbQueryResult: Reads[TsdbQueryResult] = (
+  import Metric.rateOptionsFormat
+
+  implicit val subQueryFormat: Reads[SubQuery] = (
     (JsPath \ "metric").read[String] and
-      (JsPath \ "tags").read[Map[String, String]]
+    (JsPath \ "aggregator").read[String] and
+    (JsPath \ "rate").readNullable[Boolean] and
+    (JsPath \ "rateOptions").readNullable[RateOptions] and
+    (JsPath \ "downsample").readNullable[String] and
+    (JsPath \ "tags").readNullable[Map[String, String]]
+  )(
+    (metric: String,
+     aggregator: String,
+     rate: Option[Boolean],
+     rateOptions: Option[RateOptions],
+     downsample: Option[String],
+     tags: Option[Map[String, String]]) => {
+
+      val tagPattern = ".+\\((.+)\\)".r
+      val _tags: Option[Map[String, String]] = tags.map { _.map {
+        case (k, v) =>
+          val tagPattern(_v) = v
+          k -> _v
+      }}
+
+      SubQuery(
+        metric = metric,
+        aggregator = aggregator,
+        rate = rate,
+        rateOptions = rateOptions,
+        downsample = downsample,
+        tags = _tags,
+        filters = None,
+        explicitTags = None
+      )
+    }
+  )
+
+  implicit val tsdbQueryResultReads: Reads[TsdbQueryResult] = (
+    (JsPath \ "metric").read[String] and
+    (JsPath \ "tags").read[Map[String, String]] and
+    (JsPath \ "dps").read[Map[String, Long]] and
+    (JsPath \ "query").read[SubQuery]
+  )(
+    (metric: String, tags: Map[String, String], dps: Map[String, Long], query: SubQuery) =>
+      TsdbQueryResult(
+        metric = metric,
+        tags = tags,
+        dps = dps.map {
+          case (ts, v) => DataPoint(ts.toLong, v)
+        }.toSeq,
+        subQuery = query
+      )
   )
 }
