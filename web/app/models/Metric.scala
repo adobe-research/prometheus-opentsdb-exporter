@@ -11,7 +11,7 @@ case class RateOptions(
 )
 
 case class Filter(
-  `type`: String,
+  filterType: String,
   tagk: String,
   filter: String,
   groupBy: Option[Boolean]
@@ -43,6 +43,7 @@ case class Query(
 case class Metric(
   name: String,
   description: String,
+  metricType: String,
   query: Query
 ) {
   lazy val queryPayload: JsValue = {
@@ -87,13 +88,14 @@ object Metric {
 
   implicit val queryFormat: Format[Query] = (
     (JsPath \ "start").format[String] and
-    (JsPath \ "description").formatNullable[String] and
+    (JsPath \ "end").formatNullable[String] and
     (JsPath \ "mappings").format[Seq[Mapping]](minLength[Seq[Mapping]](1))
   )(Query.apply, unlift(Query.unapply))
 
   implicit val metricFormat: Format[Metric] = (
     (JsPath \ "name").format[String] and
     (JsPath \ "description").format[String] and
+    (JsPath \ "type").format[String] and
     (JsPath \ "query").format[Query]
   )(Metric.apply, unlift(Metric.unapply))
 }

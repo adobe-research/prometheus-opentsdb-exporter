@@ -10,6 +10,6 @@ import models._
 class HomeController @Inject() extends Controller {
 
   def status = Action {
-    Ok(s"OpenTSDB exporter for Prometheus (v${BuildInfo.version})")
+    Ok(views.html.index(BuildInfo.version))
   }
 }

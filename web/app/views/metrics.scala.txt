@@ -1,0 +1,13 @@
+@(metricGroups: Seq[(String, String, String, Seq[PrometheusMetric])])
+@for(metricGroup <- metricGroups) {
+    # HELP @metricGroup._1 @metricGroup._2
+    # TYPE @metricGroup._1 @metricGroup._3
+    @for(metric <- metricGroup._4) {
+        @(metric.name)@(printTags(metric.tags))@(metric.value)
+    }
+}
+
+@printTags(tags: Map[String, String]) = @{
+    if (tags.isEmpty) " "
+    else s"{${tags.map(t => s"${t._1}=${t._2}").mkString(",")}} "
+}

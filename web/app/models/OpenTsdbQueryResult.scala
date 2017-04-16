@@ -14,9 +14,15 @@ case class DataPoint(
 case class PrometheusMetric(
   name: String,
   description: String,
+  metricType: String,
   tags: Map[String, String],
   value: Long
-)
+) {
+//  def asOutputString: String = {
+//    val tagsAsString = tags.map(s"$k=$v")
+//    s"$name "
+//  }
+}
 
 case class TsdbQueryResult(
   metric: String,
@@ -31,7 +37,7 @@ case class TsdbQueryResult(
       mapping <- metric.query.mappings.find(_.subQuery == subQuery)
       tags <- mapping.prometheusTags
       dp <- latestDataPoint
-    } yield PrometheusMetric(metric.name, metric.description, tags, dp.value)
+    } yield PrometheusMetric(metric.name, metric.description, metric.metricType, tags, dp.value)
   }
 }
 

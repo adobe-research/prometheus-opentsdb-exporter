@@ -33,7 +33,17 @@ class MetricsController @Inject()(
   private val openTsdbUrl = configuration.getString("metrics.openTsdb.url").get
   private val openTsdbTimeout = configuration.getLong("metrics.openTsdb.timeout").get
 
-  private [this] def issueOpenTsdbRequest(metric: Metric): Future[Either[Throwable, (Metric, WSResponse)]] = {
+  private def issueOpenTsdbRequest(metric: Metric): Future[Either[Throwable, Seq[PrometheusMetric]]] = {
+    def parseResponse(response: WSResponse): Seq[PrometheusMetric] = {
+      import TsdbQueryResult._
+      response.json.validate[Seq[TsdbQueryResult]].fold(
+        valid = queryResults =>
+          queryResults.flatMap(_.extractResults(metric)),
+        invalid = errors =>
+          throw new Exception(s"JSON parse errors: ${Json.toJson(errors).toString}")
+      )
+    }
+
     ws.url(s"$openTsdbUrl/api/query")
       .withRequestTimeout(openTsdbTimeout seconds)
       .withFollowRedirects(true)
@@ -41,20 +51,19 @@ class MetricsController @Inject()(
       .transform(
         response =>
           if ((response.status >= 200) && (response.status < 300)) {
-            Right(metric -> response)
+            Right(parseResponse(response))
           } else {
             val msg = s"OpenTSDB service error (${response.status}: ${response.statusText}\n${response.body})"
             throw new Exception(msg)
           },
         identity
       )
-
-    .recover {
-      case t => Left(t)
-    }
+      .recover {
+        case t => Left(t)
+      }
   }
 
-  def config = Action.async { implicit request =>
+  def config: Action[AnyContent] = Action.async { implicit request =>
     metricsRepoService.metricsRepo.flatMap { mr =>
       (mr ? GetMetrics).mapTo[MetricsRepoMessage].map {
         case MetricsList(metrics) => Ok(Json.toJson(metrics))
@@ -63,38 +72,33 @@ class MetricsController @Inject()(
     }
   }
 
-  def metrics = Action.async { implicit request =>
+  def metrics: Action[AnyContent] = Action.async { implicit request =>
     metricsRepoService.metricsRepo.flatMap { mr =>
-      (mr ? GetMetrics).mapTo[MetricsRepoMessage].map {
+      (mr ? GetMetrics).mapTo[MetricsRepoMessage].flatMap {
         case MetricsList(metrics) =>
-          metrics.map(issueOpenTsdbRequest)
-          .map { _.map {
-            case Right((metric, response)) =>
-              import TsdbQueryResult._
-              response.json.validate[Seq[TsdbQueryResult]].fold(
-                valid = queryResults => {
-                  queryResults.flatMap { queryResult =>
-                    queryResult.extractResults(metric)
-                  }.foreach { promMetric =>
-                    Logger.info("-----------")
-                    Logger.info(s"Metric: ${promMetric.name}")
-                    Logger.info(s"Value: ${promMetric.value}")
-                    Logger.info("Tags:")
-                    promMetric.tags.foreach {
-                      case (k, v) =>
-                        Logger.info(s"\t$k: $v")
-                    }
-                    Logger.info("-----------")
-                  }
-                },
-                invalid = errors =>
-                  Logger.info(Json.toJson(errors).toString)
-              )
-            }
-          }
-          Ok("")
+          Future.sequence(metrics.map(issueOpenTsdbRequest))
+            .map { results =>
+              val (errors, promMetrics) = results.partition(_.isLeft)
 
-        case _ => InternalServerError
+              // log the errors
+              for (Left(t) <- errors) Logger.info(t.getMessage)
+
+              // generate the output metrics
+              val pmGroups = (for (Right(pm) <- promMetrics) yield pm).map { pmGroup =>
+                // all metrics in a metric group share the same name, description and type
+                val first = pmGroup.head
+                (first.name, first.description, first.metricType, pmGroup)
+              }
+
+              val output = views.txt.metrics(pmGroups).body.split("\n")
+                .map(_.trim)          // trim leading/trailing spaces
+                .filterNot(_.isEmpty) // get rid of all the empty lines
+                .mkString("\n")
+
+              Ok(output)
+            }
+
+        case _ => Future.successful(InternalServerError)
       }
     }
   }
