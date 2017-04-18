@@ -32,23 +32,23 @@ Note that a single Prometheus metric has the following properties:
  
 There are a number of restrictions on the values allowed for each of these properties. For example, the **name** property only allows alpha-numeric characters and underscores. At the same time, the **type** property must be one of the following: `counter`, `gauge`, `summary` and `histogram`. For more information about the best practices for metric and label naming see this [link](https://prometheus.io/docs/practices/naming/). Another important resource for an in-depth look at the Prometheus data model is available [here](https://prometheus.io/docs/concepts/data_model/).
 
-On the other side of the equation we have OpenTSDB queries (exposed by the OpenTSDB server on the `/api/query` endpoint). Details about the ins-and-outs of the REST APIs used by this component can be found at this [page](http://opentsdb.net/docs/build/html/api_http/query/index.html). On of the key aspects about the REST API exposed by OpenTSDB is that it allows us to bundle multiple _sub-queries_ into a single HTTP call. We took advantage of this possibility to establish the following mapping between Prometheus metrics and OpenTSDB queries:
+On the other side of the equation we have OpenTSDB queries (exposed by the OpenTSDB server on the `/api/query` endpoint). Details about the ins-and-outs of the REST APIs used by OpenTSDB can be found at this [page](http://opentsdb.net/docs/build/html/api_http/query/index.html). One of the key aspects about the REST API exposed by OpenTSDB is that it allows us to bundle multiple _sub-queries_ into a single HTTP call. We took advantage of this possibility to establish the following mapping between Prometheus metrics and OpenTSDB queries:
 
  - a single Prometheus metric corresponds to a single OpenTSDB query (i.e. HTTP call against the OpenTSDB server)
- - a single tagged value that is part of a particular Prometheus metric corresponds to a single sub-query inside the associated OpenTSDB query for that particular Prometheus metric.
+ - a single tagged value that is part of a particular Prometheus metric corresponds to a single sub-query inside the associated OpenTSDB query.
  
  In a nutshell, we map the tagged values that are part of a Prometheus metric to a set of sub-queries that are part of an aggregate OpenTSDB query. This mapping is defined by the user through a set of JSON-formatted configuration files.
 
 ## Understanding the mappings configuration file
- We'll use the power of an example to better illustrate the structure of the mappings configuration file:
+ We'll use the power of an example to better illustrate the structure of the mappings configuration file.
  
-  - we have a Prometheus metric called `test_app_metrics_one` of type `counter` that is composed of two tagged values as follows:
+ Let's assume we have a Prometheus metric called `test_app_metrics_one` of type `counter` that is composed of two tagged values as follows:
   
-    - the first tagged value with tags `{severity=warning;escalation=email}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=stage` aggregated via the `avg` operator over the last 10 seconds.
+  - the first tagged value with tags `{severity=warning;escalation=email}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=stage` and aggregated via the `avg` operator over the last 10 seconds.
  
-    - the second tagged value with tags `{severity=critical;escalation=pagerduty}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=prod` aggregated via the `avg` operator over the last 10 seconds.
+  - the second tagged value with tags `{severity=critical;escalation=pagerduty}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=prod` and aggregated via the `avg` operator over the last 10 seconds.
     
-The output presented by our component when the Prometheus server queries the `/metrics` endpoint should look something like below:
+The output presented by the TSDB exporter component when the Prometheus server queries the `/metrics` endpoint should look something like below:
 
 ```
 # HELP test_app_metrics_one TestApp metrics: one
@@ -84,7 +84,7 @@ The query that hits the OpenTSDB server on the `/api/query` endpoint should be a
 }
 ```
 
-The responses returned by OpenTSDB for each of these queries will be mapped back by our component to the Prometheus metric and it's corresponding tagged values to yield the final result presented above. **NOTE**: the `"showQuery": true` flag attached to the OpenTSDB query allows us to match the OpenTSDB sub-query responses to the appropriate Prometheus tagged value.
+The responses returned by OpenTSDB for each of these queries will be mapped back by our component to the appropriate Prometheus metric and it's corresponding tagged values to yield the final result presented above. **NOTE**: the `"showQuery": true` flag attached to the OpenTSDB query allows us to match the OpenTSDB sub-query responses to the appropriate Prometheus tagged value.
 
 The mapping configuration file that yields the results described in this example is shown in the listing below:
 
@@ -135,7 +135,7 @@ The mapping configuration file that yields the results described in this example
 
 The configuration file consists in a _list_ of Prometheus metrics definitions. Each entry in this list contains information about the Prometheus metric that is being exposed on the `/metrics` endpoint towards the Prometheus server component: things like the metric **name**, **description** and **type**. The key takeaway from this example is in the `query/mappings` entry: this is the part that describes how a specific tagged value on the Prometheus side maps to an OpenTSDB sub-query. 
 
-The `subQuery` entry supports everything that an OpenTSDB query supports (see [this](http://opentsdb.net/docs/build/html/api_http/query/index.html) for complete details). In this very simplistic example we only specified the OpenTSDB metric **name**, **tags** and **aggregator**. But you can set options related to downsampling, filters, rate & rateOptions etc.
+The `subQuery` entry supports everything that an OpenTSDB query supports (see [this](http://opentsdb.net/docs/build/html/api_http/query/index.html) for complete details). In this simplistic example we only specified the OpenTSDB metric **name**, **tags** and **aggregator**. But you can set options related to downsampling, filters, rate & rateOptions etc.
 
 The result that OpenTSDB sends back in response to one of these queries looks like the following:
 
@@ -190,7 +190,7 @@ The result that OpenTSDB sends back in response to one of these queries looks li
 ]
 ```
 
-One thing to note at this point is that the response corresponding to a single OpenTSDB query contains multiple data points (see the `dps`) entry. This means that in the analysis window that we selected (of 10 seconds ago) there were multiple values available for the `test.app.metrics.one` time series. The OpenTSDB exporter selects the **oldest available value** (i.e. corresponding to the largest timestamp) as the output metric value that is presented to the Prometheus server component.
+One thing to note at this point is that the response corresponding to a single OpenTSDB query contains multiple data points (see the `dps`) entry. This means that in the analysis window that we selected (of 10 seconds ago) there were multiple values available for the `test.app.metrics.one` time series (and associated tags). The OpenTSDB exporter selects the **oldest available value** (i.e. corresponding to the largest timestamp) as the output metric value that is reflected back to the Prometheus server component.
 
 ## Configuration options
 This section lists all the configuration options made available by the OpenTSDB exporter component:
@@ -202,10 +202,22 @@ This section lists all the configuration options made available by the OpenTSDB 
 
 **NOTE**: the OpenTSDB exporter will periodically scan the `METRICS_DIR` folder (currently set for 10 sec) and it will load/parse all the JSON files it finds at that location. You are not required to place all your metrics in a single configuration file. You can also place new files in that folder and the component will automatically pick them up w/o the need to restart it (there is 0 downtime for configuration change).
 
-## Performance considerations
-The OpenTSDB exporter will issue a separate query against the OpenTSDB server for each Prometheus metric (not for each individual tagged value because those are represented as OpenTSDB sub-queries) every time the Prometheus server scrapes the `/metrics` endpoint.
+## Running the application
+The TSDB exporter is a web application developed using the Play framework. It is a JVM-based application and the final artifact is a JAR file. The distribution tools provided by the Play SBT plugin creates a self-contained distributable package in the form of a ZIP archive which contains an easy-to-use launcher script at the `bin/web` location (relative to the root folder of the archive).
 
-Thus, one can foresee a situation when a Prometheus server configuration with a high scraping setting (i.e. a small scraping window) in combination with a large number of metric definitions on the tsdb exporter side can lead to a high pressure on the OpenTSDB REST API endpoint.
+In conclusion, to launch the TSDB exporter one needs to follow a few simple steps:
+ 
+ - got to the [release](https://github.com/adobe-research/prometheus-opentsdb-exporter/releases) page and download the latest version
+ - unzip the contents of the archive at the location of your choice
+ - inside the folder where the archive was extracted, run the following:
+ ```bash
+ OPEN_TSDB_URL=<open-tsdb-url> METRICS_DIR=<metric-definition-dir> bin/web
+ ```
+ 
+## Performance considerations
+The OpenTSDB exporter will issue a separate query against the OpenTSDB server for each Prometheus metric (not for each individual tagged value because those are represented as OpenTSDB sub-queries). The call is triggered every time the Prometheus server scrapes the `/metrics` endpoint.
+
+One can imagine a situation when a Prometheus server configuration with a high frequency scraping setting (i.e. a small scraping window) in combination with a large number of metric definitions on the tsdb exporter side can lead to significant pressure on the OpenTSDB REST API endpoint.
 
 **Example**: Prometheus server is configured with a scraping interval of 1s and there are 100 metric definitions on the OpenTSDB exporter side. In this scenario, the exporter will hit the OpenTSDB REST API endpoint with 100 individual queries/second.
 
