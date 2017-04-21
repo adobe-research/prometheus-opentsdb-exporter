@@ -21,7 +21,7 @@ class MetricsRepoService @Inject()(
   private implicit val to: Timeout = 5 seconds
 
   private val metricsDir = configuration.getString("metrics.dir").get
-  private val refreshTime = configuration.getLong("metrics.refreshTime").get
+  private val refreshTime = configuration.getLong("metrics.configRefreshTime").get
 
   private implicit val ec = system.dispatcher
 

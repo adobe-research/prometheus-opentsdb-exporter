@@ -1,20 +1,18 @@
 package controllers
 
 import javax.inject._
+import java.util.concurrent.Executors
 
-import scala.util.{Success, Failure}
-import scala.concurrent.Future
+import scala.concurrent._
 import scala.concurrent.duration._
 
 import akka.pattern.ask
 import akka.util.Timeout
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.libs.ws._
 import play.api.mvc._
 import play.api.{Configuration, Logger}
-import play.api.data.validation.ValidationError
 
 import models._
 import actors.MetricsRepoActor._
@@ -32,6 +30,10 @@ class MetricsController @Inject()(
 
   private val openTsdbUrl = configuration.getString("metrics.openTsdb.url").get
   private val openTsdbTimeout = configuration.getLong("metrics.openTsdb.timeout").get
+  private val openTsdbThreadCount = configuration.getInt("metrics.openTsdb.threadCount").get
+
+  implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(openTsdbThreadCount))
+
 
   private def issueOpenTsdbRequest(metric: Metric): Future[Either[Throwable, Seq[PrometheusMetric]]] = {
     def parseResponse(response: WSResponse): Seq[PrometheusMetric] = {
@@ -81,7 +83,7 @@ class MetricsController @Inject()(
               val (errors, promMetrics) = results.partition(_.isLeft)
 
               // log the errors
-              for (Left(t) <- errors) Logger.info(t.getMessage)
+              for (Left(t) <- errors) Logger.error(t.getMessage)
 
               // generate the output metrics
               val pmGroups = (for (Right(pm) <- promMetrics) yield pm).map { pmGroup =>
@@ -90,6 +92,7 @@ class MetricsController @Inject()(
                 (first.name, first.description, first.metricType, pmGroup)
               }
 
+              // we need to massage the template generated output a little bit
               val output = views.txt.metrics(pmGroups).body.split("\n")
                 .map(_.trim)          // trim leading/trailing spaces
                 .filterNot(_.isEmpty) // get rid of all the empty lines

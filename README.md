@@ -195,12 +195,15 @@ One thing to note at this point is that the response corresponding to a single O
 ## Configuration options
 This section lists all the configuration options made available by the OpenTSDB exporter component:
 
-| Config option |  Type  | Required | Description                 |
-| ------------- | ------- | -------- | -------------------------- |
-| OPEN_TSDB_URL | env var |   YES    | URL of the OpenTSDB server |
-| METRICS_DIR   | env var |   YES    | Path to the folder where the metric definitions are stored |
+| Config option |  Type  | Required | Default value | Description                 |
+| ------------- | ------- | -------- | ------------ | -------------------------- |
+| OPEN_TSDB_URL | env var | YES | - | URL of the OpenTSDB server |
+| OPEN_TSDB_TIMEOUT | env var | NO | 5 | Timeout period (in sec) allowed for the HTTP requests hitting the OpenTSDB server |
+| OPEN_TSDB_THREAD_COUNT | env var | NO | 10 | Max number of threads spawned when generating OpenTSDB requests. |
+| METRICS_DIR | env var | YES | - | Path to the folder where the metric definitions are stored |
+| CONFIG_REFRESH_TIME | env var | NO | 10 | How often (in sec) should the config files in the `METRICS_DIR` should be reloaded. |
 
-**NOTE**: the OpenTSDB exporter will periodically scan the `METRICS_DIR` folder (currently set for 10 sec) and it will load/parse all the JSON files it finds at that location. You are not required to place all your metrics in a single configuration file. You can also place new files in that folder and the component will automatically pick them up w/o the need to restart it (there is 0 downtime for configuration change).
+**NOTE**: the OpenTSDB exporter will periodically scan the `METRICS_DIR` folder (by default set for 10 sec) and it will load/parse all the JSON files it finds at that location. You are not required to place all your metrics in a single configuration file. You can also place new files in that folder and the component will automatically pick them up w/o the need to restart it (there is 0 downtime for configuration change).
 
 ## Running the application
 The TSDB exporter is a web application developed using the Play framework. It is a JVM-based application and the final artifact is a JAR file. The distribution tools provided by the Play SBT plugin creates a self-contained distributable package in the form of a ZIP archive which contains an easy-to-use launcher script at the `bin/web` location (relative to the root folder of the archive).
