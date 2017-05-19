@@ -1,0 +1,15 @@
+play {
+  crypto.secret = "e3085hjgfslsd-8605jhglsjgfopfp0860586lsj"
+  i18n.langs = ["en"]
+}
+
+metrics {
+  openTsdb {
+    url = "{{ default .Env.OPEN_TSDB_URL "" }}"
+    timeout = {{ default .Env.OPEN_TSDB_TIMEOUT "5" }}
+    threadCount = {{ default .Env.OPEN_TSDB_THREAD_COUNT "10" }}
+  }
+
+  dir = "/prom-tsdb-exporter/metrics"
+}
+

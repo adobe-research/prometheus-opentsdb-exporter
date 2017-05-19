@@ -1,0 +1,57 @@
+{
+  "id": "/afecioru/tsdb-exporter",
+  "cpus": 1,
+  "mem": 1024,
+  "instances": 1,
+
+  "constraints": [["ethos_role", "CLUSTER", "worker"]],
+
+
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "andreifecioru/prom-tsdb-exporter:1.0.0",
+      "network": "BRIDGE",
+      "forcePullImage": true,
+      "portMappings": [ {
+        "protocol": "tcp",
+        "containerPort": 9000,
+        "hostPort": 0,
+        "servicePort": 10500
+      } ],
+      "parameters": [
+        { "key": "tty", "value": "true" }
+      ]
+    }
+  },
+
+  "labels": {
+    "HAPROXY_GROUP": "internal"
+  },
+
+  "env": {
+  "S6_KEEP_ENV": "1",
+  "CONFIG_SUPERVISOR_ENABLED": "true",
+  "RCLONE_CONFIG_SHARED_TYPE": "azure",
+  "RCLONE_CONFIG_SHARED_AWS_REGION": "",
+  "RCLONE_CONFIG_SHARED_AWS_BUCKET": "ethossummitsaignition001",
+  "RCLONE_CONFIG_SHARED_ENV_AUTH": "true",
+  "RCLONE_CONFIG_SHARED_AZURE_ACCOUNT": "ethossummitsaignition001",
+  "RCLONE_CONFIG_SHARED_AZURE_ACCOUNT_KEY": "Z48gsP6hksJm0WUuHLu8ooWUFYABQJWXJBsOINFyouTOmMXUnMp0efQqniKlPB/JMUgzjY3mUY/U2PxnXZiErw==",
+  "RCLONE_CONFIG_SHARED_AZURE_CONTAINER": "shared",
+  "CONFIG_SUPERVISOR_SYNC_INTERVAL": "10s",
+  "CONFIG_SUPERVISOR_HTTP_SERVER": "",
+  "CONFIG_SUPERVISOR_DIR": "/prom-tsdb-exporter/metrics",
+  "CONFIG_SUPERVISOR_REMOTE_DIR": "/shared/prom-tsdb-exporter/",
+  "CONFIG_SUPERVISOR_RELOAD_CMD": "curl -X POST http://localhost:9000/config/reload",
+  "OPEN_TSDB_URL": "http://marathon-lb-internal.marathon.mesos:10030"
+  },
+
+  "healthChecks": [ {
+  "protocol": "HTTP",
+  "path": "/",
+  "gracePeriodSeconds": 5,
+  "intervalSeconds": 10,
+  "maxConsecutiveFailures": 3
+  } ]
+}
