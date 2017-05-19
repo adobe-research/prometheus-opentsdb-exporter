@@ -74,6 +74,11 @@ class MetricsController @Inject()(
     }
   }
 
+  def reload: Action[AnyContent] = Action { _ =>
+    metricsRepoService.reloadMetrics()
+    Ok("")
+  }
+
   def metrics: Action[AnyContent] = Action.async { implicit request =>
     metricsRepoService.metricsRepo.flatMap { mr =>
       (mr ? GetMetrics).mapTo[MetricsRepoMessage].flatMap {

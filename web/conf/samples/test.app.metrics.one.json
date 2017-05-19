@@ -1,0 +1,29 @@
+[
+  {
+    "name": "test_app_metrics_one",
+    "description": "TestApp metrics: one",
+    "type": "counter",
+
+    "query": {
+      "start": "10s-ago",
+      "end": "0s-ago",
+
+      "mappings": [
+        {
+          "subQuery": {
+            "metric": "test.app.metrics.one",
+            "aggregator": "avg",
+            "rate": false,
+            "tags": {
+              "role": "developer"
+            }
+          },
+          "prometheusTags": {
+            "severity": "critical",
+            "escalation": "pagerduty"
+          }
+        }
+      ]
+    }
+  }
+]

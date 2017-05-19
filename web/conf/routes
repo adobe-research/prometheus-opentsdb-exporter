@@ -5,6 +5,7 @@
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.status
 GET     /config                     controllers.MetricsController.config
+POST    /config/reload              controllers.MetricsController.reload
 GET     /metrics                    controllers.MetricsController.metrics
 
 # Map static resources from the /public folder to the /assets URL path

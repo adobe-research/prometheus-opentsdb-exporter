@@ -21,7 +21,6 @@ class MetricsRepoService @Inject()(
   private implicit val to: Timeout = 5 seconds
 
   private val metricsDir = configuration.getString("metrics.dir").get
-  private val refreshTime = configuration.getLong("metrics.configRefreshTime").get
 
   private implicit val ec = system.dispatcher
 
@@ -44,7 +43,7 @@ class MetricsRepoService @Inject()(
       }
   }
 
-  system.scheduler.schedule(0 second, refreshTime second) {
+  def reloadMetrics(): Unit = {
     metricsRepo.foreach { mr =>
       Logger.info("Loading metrics definitions.")
 
@@ -54,13 +53,16 @@ class MetricsRepoService @Inject()(
         Logger.info(s"Loading metrics definitions from: ${f.getAbsolutePath}")
 
         Json.parse(new FileInputStream(f)).validate[Seq[Metric]].fold(
-          valid = metrics =>
+          valid = metrics => {
+            Logger.info("Metrics definitions parsed and validating. Reloading...")
             mr ! RegisterMetrics(metrics)
-          ,
+          },
           invalid = errors =>
             Logger.error(errors.mkString("\n"))
         )
       }
     }
   }
+
+  reloadMetrics()
 }

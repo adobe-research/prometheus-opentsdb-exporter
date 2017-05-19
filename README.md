@@ -11,7 +11,7 @@ The OpenTSDB exporter module is nothing more than a simple HTTP server which exp
  
 Before the TSDB exporter can expose any alerting info on the `/metrics` endpoint for the Prometheus server to consume, one needs to define a way to translate the time-series data stored in OpenTSDB into something the Prometheus server can understand. However this type of mapping is not straight-forward: the two systems handle data in two completely different ways based on different assumptions and conventions. One can simply cannot define a single pre-defined way of exposing data from OpenTSDB (which deals with time-series data) to Prometheus-server metrics (which are simple tagged values that are being sampled at periodic time intervals).
 
-This component implements a user-defined mechanism for specifying this translation process in the form of a set of JSON-formatted configuration files. The application periodically scans the contents of a particular user-specified folder (part of the application's configuration) and loads all the JSON files it can find and parses the metric definitions stored within. The remainder of this section describes the format of these definitions.
+This component implements a user-defined mechanism for specifying this translation process in the form of a set of JSON-formatted configuration files. The application scans the contents of a particular user-specified folder (part of the application's configuration), loads all the JSON files it can find and parses the metric definitions stored within. The remainder of this section describes the format of these definitions.
 
 A single JSON metric configuration file contains a set of _metric definitions_. A metric definition links a single Prometheus metric to a single OpenTSDB query. Below is an example of a Prometheus metric (this is the format understood by Prometheus server):
 
@@ -201,9 +201,8 @@ This section lists all the configuration options made available by the OpenTSDB 
 | OPEN_TSDB_TIMEOUT | env var | NO | 5 | Timeout period (in sec) allowed for the HTTP requests hitting the OpenTSDB server |
 | OPEN_TSDB_THREAD_COUNT | env var | NO | 10 | Max number of threads spawned when generating OpenTSDB requests. |
 | METRICS_DIR | env var | YES | - | Path to the folder where the metric definitions are stored |
-| CONFIG_REFRESH_TIME | env var | NO | 10 | How often (in sec) should the config files in the `METRICS_DIR` should be reloaded. |
 
-**NOTE**: the OpenTSDB exporter will periodically scan the `METRICS_DIR` folder (by default set for 10 sec) and it will load/parse all the JSON files it finds at that location. You are not required to place all your metrics in a single configuration file. You can also place new files in that folder and the component will automatically pick them up w/o the need to restart it (there is 0 downtime for configuration change).
+**NOTE**: the OpenTSDB exporter is able to reload the metrics definition files on-demand: just issue an HTTP POST request to the `/config/reload` endpoint. Reloading the metrics definition files is performed with no downtime (hot reload). The changes are applied immediatelly.
 
 ## Running the application
 The TSDB exporter is a web application developed using the Play framework. It is a JVM-based application and the final artifact is a JAR file. The distribution tools provided by the Play SBT plugin creates a self-contained distributable package in the form of a ZIP archive which contains an easy-to-use launcher script at the `bin/web` location (relative to the root folder of the archive).
