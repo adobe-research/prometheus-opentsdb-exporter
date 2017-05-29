@@ -1,13 +1,16 @@
 package services
 
 import scala.concurrent.duration._
+
 import java.io.{File, FileInputStream}
 import javax.inject._
 
 import akka.actor.{ActorNotFound, ActorSystem}
 import akka.util.Timeout
+
 import play.api.libs.json._
 import play.api.{Configuration, Logger}
+
 import models.Metric
 import actors.MetricsRepoActor
 import actors.MetricsRepoActor.{RegisterMetrics, ResetMetrics}
@@ -29,6 +32,8 @@ class MetricsRepoService @Inject()(
     if (d.exists && d.isDirectory) {
       d.listFiles.filter(_.isFile).toList
     } else {
+      Logger.warn(s"Metrics dir not found: $dir")
+      Logger.info(s"Working dir: ${new File(".").getAbsolutePath}")
       List[File]()
     }
   }
@@ -39,7 +44,7 @@ class MetricsRepoService @Inject()(
       .resolveOne()
       .recover {
         case ActorNotFound(_) =>
-          system.actorOf(MetricsRepoActor.props, MetricsRepoActor.name)
+          system.actorOf(MetricsRepoActor.props(), MetricsRepoActor.name)
       }
   }
 

@@ -14,30 +14,30 @@ case class Filter(
   filterType: String,
   tagk: String,
   filter: String,
-  groupBy: Option[Boolean]
+  groupBy: Option[Boolean] = None
 )
 
 
 case class SubQuery(
   aggregator: String,
   metric: String,
-  rate: Option[Boolean],
-  rateOptions: Option[RateOptions],
-  downsample: Option[String],
-  tags: Option[Map[String, String]],
-  filters: Option[Seq[Filter]],
-  explicitTags: Option[Boolean]
+  rate: Option[Boolean] = None,
+  rateOptions: Option[RateOptions] = None,
+  downsample: Option[String] = None,
+  tags: Option[Map[String, String]] = None,
+  filters: Option[Seq[Filter]] = None,
+  explicitTags: Option[Boolean] = None
 )
 
 case class Mapping(
   subQuery: SubQuery,
-  prometheusTags: Option[Map[String, String]]
+  prometheusTags: Option[Map[String, String]] = None
 )
 
 case class Query(
   start: String,
-  end: Option[String],
-  mappings: Seq[Mapping]
+  mappings: Seq[Mapping],
+  end: Option[String] = None
 )
 
 case class Metric(
@@ -88,8 +88,8 @@ object Metric {
 
   implicit val queryFormat: Format[Query] = (
     (JsPath \ "start").format[String] and
-    (JsPath \ "end").formatNullable[String] and
-    (JsPath \ "mappings").format[Seq[Mapping]](minLength[Seq[Mapping]](1))
+    (JsPath \ "mappings").format[Seq[Mapping]](minLength[Seq[Mapping]](1)) and
+    (JsPath \ "end").formatNullable[String]
   )(Query.apply, unlift(Query.unapply))
 
   implicit val metricFormat: Format[Metric] = (

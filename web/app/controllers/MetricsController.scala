@@ -91,7 +91,9 @@ class MetricsController @Inject()(
               for (Left(t) <- errors) Logger.error(t.getMessage)
 
               // generate the output metrics
-              val pmGroups = (for (Right(pm) <- promMetrics) yield pm).map { pmGroup =>
+              val pmGroups = (for (Right(pm) <- promMetrics) yield pm)
+                .filterNot(_.isEmpty)
+                .map { pmGroup =>
                 // all metrics in a metric group share the same name, description and type
                 val first = pmGroup.head
                 (first.name, first.description, first.metricType, pmGroup)
@@ -106,7 +108,8 @@ class MetricsController @Inject()(
               Ok(output)
             }
 
-        case _ => Future.successful(InternalServerError)
+        case _ =>
+          Future.successful(InternalServerError)
       }
     }
   }

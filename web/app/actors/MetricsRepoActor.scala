@@ -1,13 +1,14 @@
 package actors
 
-import actors.MetricsRepoActor.{GetMetrics, MetricsList, RegisterMetrics, ResetMetrics}
-import akka.actor.{Actor, Props}
+import akka.actor._
+
 import play.api.Logger
+
 import models.Metric
 
 
 object MetricsRepoActor {
-  def props: Props = Props[MetricsRepoActor]
+  def props(listener: Option[ActorRef] = None): Props = Props(new MetricsRepoActor(listener))
   def name = "metrics-repo"
 
   sealed trait MetricsRepoMessage
@@ -17,7 +18,9 @@ object MetricsRepoActor {
   case class MetricsList(metrics: Seq[Metric]) extends MetricsRepoMessage
 }
 
-class MetricsRepoActor extends Actor {
+class MetricsRepoActor(listener: Option[ActorRef] = None) extends Actor {
+  import actors.MetricsRepoActor._
+
   private [this] var metricsRepo: Map[String, Metric] = Map.empty
 
   override def receive = {
@@ -34,7 +37,9 @@ class MetricsRepoActor extends Actor {
       }
 
     case GetMetrics =>
-      sender ! MetricsList(metricsRepo.values.toList)
+      val metrics = MetricsList(metricsRepo.values.toList)
+      sender ! metrics
+      listener.foreach(_ ! metrics)
 
     case ResetMetrics =>
       Logger.info("Resetting metrics.")

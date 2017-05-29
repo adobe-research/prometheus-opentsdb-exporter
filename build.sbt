@@ -18,4 +18,3 @@ lazy val web = SubProject("web")
     libraryDependencies ++= Seq(ws) ++ webAppDeps
   )
 
-

@@ -4,7 +4,8 @@ object Depedencies {
   val akkaVersion = "2.4.14"
 
   val commonDeps = Seq(
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
+    "org.specs2" %% "specs2-mock" % "3.8.9" % "test"
   )
 
   val loggingDeps = Seq(
@@ -24,5 +25,5 @@ object Depedencies {
   
      // unit-testing support
      "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test"
-   )
+  )
 }
