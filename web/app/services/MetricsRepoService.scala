@@ -30,7 +30,7 @@ class MetricsRepoService @Inject()(
   private def getListOfFiles(dir: String):List[File] = {
     val d = new File(dir)
     if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isFile).toList
+      d.listFiles.filter(_.isFile).toList.sortBy(_.getAbsolutePath)
     } else {
       Logger.warn(s"Metrics dir not found: $dir")
       Logger.info(s"Working dir: ${new File(".").getAbsolutePath}")
