@@ -32,10 +32,15 @@ case class TsdbQueryResult(
 ) {
   private [this] lazy val latestDataPoint: Option[DataPoint] = Try(dps.maxBy(_.timestamp)).toOption
 
+  private def mergeTags(prometheusTags: Option[Map[String, String]]): Option[Map[String, String]] = tags match {
+    case _ if tags.isEmpty => prometheusTags
+    case _ => Try(prometheusTags.getOrElse(Map[String, String]()) ++ tags).toOption
+  }
+
   def extractResults(metric: Metric): Option[PrometheusMetric] = {
     for {
       mapping <- metric.query.mappings.find(_.subQuery == subQuery)
-      tags <- mapping.prometheusTags
+      tags <- mergeTags(mapping.prometheusTags)
       dp <- latestDataPoint
     } yield PrometheusMetric(metric.name, metric.description, metric.metricType, tags, dp.value)
   }
