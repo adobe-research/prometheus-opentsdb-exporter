@@ -9,5 +9,5 @@
 
 @printTags(tags: Map[String, String]) = @{
     if (tags.isEmpty) " "
-    else s"{${tags.map(t => s"${t._1}=${t._2}").mkString(",")}} "
+    else s"{${tags.map(t => s"""${t._1}="${t._2}"""").mkString(",")}} "
 }
