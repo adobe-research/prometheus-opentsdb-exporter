@@ -78,10 +78,10 @@ class MetricsControllerSpec extends PlaySpec
         output must contain theSameElementsInOrderAs List(
           "# HELP test_app_metrics_one TestApp metrics: one",
           "# TYPE test_app_metrics_one counter",
-          "test_app_metrics_one{severity=critical,escalation=pagerduty,role=developer} 15",
+          """test_app_metrics_one{severity="critical",escalation="pagerduty",role="developer"} 15""",
           "# HELP test_app_metrics_two TestApp metrics: two",
           "# TYPE test_app_metrics_two counter",
-          "test_app_metrics_two{severity=critical,escalation=pagerduty,role=developer} 10"
+          """test_app_metrics_two{severity="critical",escalation="pagerduty",role="developer"} 10"""
         )
       }
     }
