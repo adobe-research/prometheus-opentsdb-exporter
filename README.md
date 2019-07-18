@@ -44,17 +44,17 @@ On the other side of the equation we have OpenTSDB queries (exposed by the OpenT
  
  Let's assume we have a Prometheus metric called `test_app_metrics_one` of type `counter` that is composed of two tagged values as follows:
   
-  - the first tagged value with tags `{severity=warning;escalation=email}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=stage` and aggregated via the `avg` operator over the last 10 seconds.
+  - the first tagged value with tags `{severity="warning";escalation="email"}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=stage` and aggregated via the `avg` operator over the last 10 seconds.
  
-  - the second tagged value with tags `{severity=critical;escalation=pagerduty}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=prod` and aggregated via the `avg` operator over the last 10 seconds.
+  - the second tagged value with tags `{severity="critical";escalation="pagerduty"}` should be mapped to an OpenTSDB query on the `test.app.metrics.one` time-series tagged with `environment=prod` and aggregated via the `avg` operator over the last 10 seconds.
     
 The output presented by the TSDB exporter component when the Prometheus server queries the `/metrics` endpoint should look something like below:
 
 ```
 # HELP test_app_metrics_one TestApp metrics: one
 # TYPE test_app_metrics_one counter
-test_app_metrics_one{severity=warning,escalation=email} 15
-test_app_metrics_one{severity=critical,escalation=pagerduty} 10
+test_app_metrics_one{severity="warning",escalation="email"} 15
+test_app_metrics_one{severity="critical",escalation="pagerduty"} 10
 ```
 
 The query that hits the OpenTSDB server on the `/api/query` endpoint should be a POST HTTP request with the following JSON payload:
