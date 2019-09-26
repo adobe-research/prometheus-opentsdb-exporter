@@ -50,6 +50,7 @@ case class Metric(
     import Metric._
     Json.obj(
       "start" -> query.start,
+      "end" -> query.end,
       "showQuery" -> true,
       "queries" -> query.mappings.map(m => Json.toJson(m.subQuery))
     )
