@@ -204,6 +204,16 @@ This section lists all the configuration options made available by the OpenTSDB 
 
 **NOTE**: the OpenTSDB exporter is able to reload the metrics definition files on-demand: just issue an HTTP POST request to the `/config/reload` endpoint. Reloading the metrics definition files is performed with no downtime (hot reload). The changes are applied immediatelly.
 
+
+## Building
+
+Prerequisites: [sbt](https://www.scala-sbt.org/download.html).
+
+```bash
+sbt dist
+```
+
+
 ## Running the application
 The TSDB exporter is a web application developed using the Play framework. It is a JVM-based application and the final artifact is a JAR file. The distribution tools provided by the Play SBT plugin creates a self-contained distributable package in the form of a ZIP archive which contains an easy-to-use launcher script at the `bin/web` location (relative to the root folder of the archive).
 
