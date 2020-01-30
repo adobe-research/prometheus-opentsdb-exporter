@@ -51,5 +51,5 @@ abstract class OpenTsdbWSMock extends Mockito with WSClient {
 
   protected def responsePayload: Map[String, JsValue]
 
-  override def close() = ()
+  override def close(): Unit = ()
 }
