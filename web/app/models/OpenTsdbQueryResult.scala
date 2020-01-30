@@ -8,7 +8,7 @@ import play.api.libs.functional.syntax._
 
 case class DataPoint(
   timestamp: Long,
-  value: Long
+  value: Double
 )
 
 case class PrometheusMetric(
@@ -16,7 +16,7 @@ case class PrometheusMetric(
   description: String,
   metricType: String,
   tags: Map[String, String],
-  value: Long
+  value: Double
 ) {
 //  def asOutputString: String = {
 //    val tagsAsString = tags.map(s"$k=$v")
@@ -87,10 +87,10 @@ object TsdbQueryResult {
   implicit val tsdbQueryResultReads: Reads[TsdbQueryResult] = (
     (JsPath \ "metric").read[String] and
     (JsPath \ "tags").read[Map[String, String]] and
-    (JsPath \ "dps").read[Map[String, Long]] and
+    (JsPath \ "dps").read[Map[String, Double]] and
     (JsPath \ "query").read[SubQuery]
   )(
-    (metric: String, tags: Map[String, String], dps: Map[String, Long], query: SubQuery) =>
+    (metric: String, tags: Map[String, String], dps: Map[String, Double], query: SubQuery) =>
       TsdbQueryResult(
         metric = metric,
         tags = tags,

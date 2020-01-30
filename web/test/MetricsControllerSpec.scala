@@ -78,10 +78,10 @@ class MetricsControllerSpec extends PlaySpec
         output must contain theSameElementsInOrderAs List(
           "# HELP test_app_metrics_one TestApp metrics: one",
           "# TYPE test_app_metrics_one counter",
-          """test_app_metrics_one{severity="critical",escalation="pagerduty",role="developer"} 15""",
+          """test_app_metrics_one{severity="critical",escalation="pagerduty",role="developer"} 15.0""",
           "# HELP test_app_metrics_two TestApp metrics: two",
           "# TYPE test_app_metrics_two counter",
-          """test_app_metrics_two{severity="critical",escalation="pagerduty",role="developer"} 10"""
+          """test_app_metrics_two{severity="critical",escalation="pagerduty",role="developer"} 10.0"""
         )
       }
     }
@@ -123,7 +123,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      "1496131204": 15,
         |      "1496131205": 15,
         |      "1496131206": 15,
-        |      "1496131207": 15,
+        |      "1496131207": 15.5,
         |      "1496131208": 15,
         |      "1496131209": 15,
         |      "1496131211": 15,
