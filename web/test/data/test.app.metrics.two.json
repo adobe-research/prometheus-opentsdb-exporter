@@ -15,7 +15,7 @@
             "aggregator": "avg",
             "rate": false,
             "tags": {
-              "role": "developer"
+              "user.role": "developer"
             }
           },
           "prometheusTags": {
@@ -29,7 +29,7 @@
             "aggregator": "avg",
             "rate": false,
             "tags": {
-              "role": "developer"
+              "user.role": "developer"
             }
           },
           "prometheusTags": {

@@ -78,10 +78,10 @@ class MetricsControllerSpec extends PlaySpec
         output must contain theSameElementsInOrderAs List(
           "# HELP test_app_metrics_one TestApp metrics: one",
           "# TYPE test_app_metrics_one counter",
-          """test_app_metrics_one{severity="critical",escalation="pagerduty",role="developer"} 15.0""",
+          """test_app_metrics_one{severity="critical",escalation="pagerduty",user_role="developer"} 15.0""",
           "# HELP test_app_metrics_two TestApp metrics: two",
           "# TYPE test_app_metrics_two counter",
-          """test_app_metrics_two{severity="critical",escalation="pagerduty",role="developer"} 10.0"""
+          """test_app_metrics_two{severity="critical",escalation="pagerduty",user_role="developer"} 10.0"""
         )
       }
     }
@@ -96,7 +96,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |  {
         |    "metric": "test.app.metrics.one",
         |    "tags": {
-        |      "role": "developer"
+        |      "user.role": "developer"
         |    },
         |    "aggregateTags": [],
         |    "query": {
@@ -107,7 +107,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      "rate": false,
         |      "filters": [
         |        {
-        |          "tagk": "role",
+        |          "tagk": "user.role",
         |          "filter": "developer",
         |          "group_by": true,
         |          "type": "literal_or"
@@ -115,7 +115,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      ],
         |      "rateOptions": null,
         |      "tags": {
-        |        "role": "literal_or(developer)"
+        |        "user.role": "literal_or(developer)"
         |      }
         |    },
         |    "dps": {
@@ -139,7 +139,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |  {
         |    "metric": "test.app.metrics.two",
         |    "tags": {
-        |      "role": "developer"
+        |      "user.role": "developer"
         |    },
         |    "aggregateTags": [],
         |    "query": {
@@ -150,7 +150,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      "rate": false,
         |      "filters": [
         |        {
-        |          "tagk": "role",
+        |          "tagk": "user.role",
         |          "filter": "developer",
         |          "group_by": true,
         |          "type": "literal_or"
@@ -158,7 +158,7 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      ],
         |      "rateOptions": null,
         |      "tags": {
-        |        "role": "literal_or(developer)"
+        |        "user.role": "literal_or(developer)"
         |      }
         |    },
         |    "dps": {
