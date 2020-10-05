@@ -101,10 +101,10 @@ object TsdbQueryResult {
       )
   )
 
-  def sanitizeTagName(label: String): String = label
-    .replaceFirst("^[^\\p{L}_:]", ":")
-    .replaceAll("[^\\p{L}0-9_:]+", "_")
-
-  def sanitizeTags(prometheusTags: Map[String, String]): Map[String, String] =
+  def sanitizeTags(prometheusTags: Map[String, String]): Map[String, String] = {
+    def sanitizeTagName(label: String): String = label
+      .replaceFirst("^[^\\p{L}_:]", ":")
+      .replaceAll("[^\\p{L}0-9_:]+", "_")
     prometheusTags.map { case (key, value) => (sanitizeTagName(key), value) }
+  }
 }
