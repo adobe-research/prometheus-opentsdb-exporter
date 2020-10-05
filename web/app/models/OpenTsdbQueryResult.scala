@@ -42,7 +42,7 @@ case class TsdbQueryResult(
       mapping <- metric.query.mappings.find(_.subQuery == subQuery)
       tags <- mergeTags(mapping.prometheusTags)
       dp <- latestDataPoint
-    } yield PrometheusMetric(metric.name, metric.description, metric.metricType, tags, dp.value)
+    } yield PrometheusMetric(metric.name, metric.description, metric.metricType, TsdbQueryResult.sanitizeTags(tags), dp.value)
   }
 }
 
@@ -100,4 +100,11 @@ object TsdbQueryResult {
         subQuery = query
       )
   )
+
+  def sanitizeTags(prometheusTags: Map[String, String]): Map[String, String] = {
+    def sanitizeTagName(label: String): String = label
+      .replaceFirst("^[^\\p{L}_:]", ":")
+      .replaceAll("[^\\p{L}0-9_:]+", "_")
+    prometheusTags.map { case (key, value) => (sanitizeTagName(key), value) }
+  }
 }
