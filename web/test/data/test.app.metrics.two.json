@@ -16,7 +16,15 @@
             "rate": false,
             "tags": {
               "user.role": "developer"
-            }
+            },
+            "filters": [
+              {
+                "tagk": "user.role",
+                "filter": "developer",
+                "groupBy": true,
+                "type": "literal_or"
+              }
+            ]
           },
           "prometheusTags": {
             "severity": "critical",

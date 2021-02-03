@@ -39,7 +39,7 @@ case class TsdbQueryResult(
 
   def extractResults(metric: Metric): Option[PrometheusMetric] = {
     for {
-      mapping <- metric.query.mappings.find(_.subQuery == subQuery)
+      mapping <- metric.query.mappings.find(_.subQuery.copy(filters = None) == subQuery.copy(filters = None))
       tags <- mergeTags(mapping.prometheusTags)
       dp <- latestDataPoint
     } yield PrometheusMetric(metric.name, metric.description, metric.metricType, TsdbQueryResult.sanitizeTags(tags), dp.value)
