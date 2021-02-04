@@ -15,7 +15,6 @@
             "aggregator": "avg",
             "rate": false,
             "tags": {
-              "user.role": "developer"
             },
             "filters": [
               {
