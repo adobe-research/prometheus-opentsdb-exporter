@@ -158,7 +158,6 @@ class SimpleOpenTsdbWSMock extends OpenTsdbWSMock {
         |      ],
         |      "rateOptions": null,
         |      "tags": {
-        |        "user.role": "literal_or(developer)"
         |      }
         |    },
         |    "dps": {
