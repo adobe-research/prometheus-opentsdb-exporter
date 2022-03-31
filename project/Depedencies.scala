@@ -1,3 +1,4 @@
+import play.sbt.PlayImport.guice
 import sbt._
 
 object Depedencies {
@@ -15,15 +16,18 @@ object Depedencies {
 
   val webAppDeps = Seq(
     // allows us to use bind[] APIs in the Module definitions
-     "net.codingwell" %% "scala-guice" % "4.0.1",
+    "net.codingwell" %% "scala-guice" % "5.0.2",
   
-     // helpers for bootstrap integration
-     "com.adrianhurt" %% "play-bootstrap" % "1.1-P25-B3",
+    // helpers for bootstrap integration
+    "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4",
   
-     // compass integration
-     "org.webjars.bower" % "compass-mixins" % "0.12.10",
+    // compass integration
+    "org.webjars.bower" % "compass-mixins" % "0.12.10",
   
-     // unit-testing support
-     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test"
+    // unit-testing support
+    "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test",
+
+    // application loader
+    guice
   )
 }

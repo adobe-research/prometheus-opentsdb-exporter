@@ -1,9 +1,7 @@
 package actors
 
 import akka.actor._
-
-import play.api.Logger
-
+import play.api.Logging
 import models.Metric
 
 
@@ -18,7 +16,7 @@ object MetricsRepoActor {
   case class MetricsList(metrics: Seq[Metric]) extends MetricsRepoMessage
 }
 
-class MetricsRepoActor(listener: Option[ActorRef] = None) extends Actor {
+class MetricsRepoActor(listener: Option[ActorRef] = None) extends Actor with Logging {
   import actors.MetricsRepoActor._
 
   private [this] var metricsRepo: Map[String, Metric] = Map.empty
@@ -26,7 +24,7 @@ class MetricsRepoActor(listener: Option[ActorRef] = None) extends Actor {
   override def receive = {
     case RegisterMetrics(metrics) =>
       metrics.foreach { metric =>
-        Logger.info(s"Registering metric: ${metric.name}")
+        logger.info(s"Registering metric: ${metric.name}")
 
         val newMetric = metricsRepo.get(metric.name).map { oldMetric =>
           val newQuery = oldMetric.query.copy(mappings = oldMetric.query.mappings ++ metric.query.mappings)
@@ -42,7 +40,7 @@ class MetricsRepoActor(listener: Option[ActorRef] = None) extends Actor {
       listener.foreach(_ ! metrics)
 
     case ResetMetrics =>
-      Logger.info("Resetting metrics.")
+      logger.info("Resetting metrics.")
       metricsRepo = Map.empty
   }
 }

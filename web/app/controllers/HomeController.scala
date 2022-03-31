@@ -7,7 +7,7 @@ import models._
 
 
 @Singleton
-class HomeController @Inject() extends Controller {
+class HomeController @Inject() (cc: ControllerComponents) extends AbstractController(cc) {
 
   def status = Action {
     Ok(views.html.index(BuildInfo.version))

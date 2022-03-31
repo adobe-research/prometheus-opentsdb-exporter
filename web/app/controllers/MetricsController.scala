@@ -2,18 +2,14 @@ package controllers
 
 import javax.inject._
 import java.util.concurrent.Executors
-
 import scala.concurrent._
 import scala.concurrent.duration._
-
 import akka.pattern.ask
 import akka.util.Timeout
-
 import play.api.libs.json._
 import play.api.libs.ws._
 import play.api.mvc._
-import play.api.{Configuration, Logger}
-
+import play.api.{Configuration, Logging}
 import models._
 import actors.MetricsRepoActor._
 import services.MetricsRepoService
@@ -23,14 +19,15 @@ import services.MetricsRepoService
 class MetricsController @Inject()(
   configuration: Configuration,
   metricsRepoService: MetricsRepoService,
-  ws: WSClient
-) extends Controller {
+  ws: WSClient,
+  cc: ControllerComponents
+) extends AbstractController(cc) with Logging {
 
   private implicit val to: Timeout = 5 seconds
 
-  private val openTsdbUrl = configuration.getString("metrics.openTsdb.url").get
-  private val openTsdbTimeout = configuration.getLong("metrics.openTsdb.timeout").get
-  private val openTsdbThreadCount = configuration.getInt("metrics.openTsdb.threadCount").get
+  private val openTsdbUrl = configuration.get[String]("metrics.openTsdb.url")
+  private val openTsdbTimeout = configuration.get[Long]("metrics.openTsdb.timeout")
+  private val openTsdbThreadCount = configuration.get[Int]("metrics.openTsdb.threadCount")
 
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newWorkStealingPool(openTsdbThreadCount))
 
@@ -88,7 +85,7 @@ class MetricsController @Inject()(
               val (errors, promMetrics) = results.partition(_.isLeft)
 
               // log the errors
-              for (Left(t) <- errors) Logger.error(t.getMessage)
+              for (Left(t) <- errors) logger.error(t.getMessage)
 
               // generate the output metrics
               val pmGroups = (for (Right(pm) <- promMetrics) yield pm)
