@@ -1,10 +1,9 @@
-import scala.concurrent.Future
-
-import play.api.mvc.Results._
-import play.api.libs.json._
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
-import play.api.data.validation.ValidationError
+import play.api.libs.json.Reads._
+import play.api.libs.json._
+import play.api.mvc.Results._
+
+import scala.concurrent.Future
 
 
 package object models {
@@ -13,21 +12,21 @@ package object models {
   implicit val JsPathWrites =
     Writes[JsPath](p => JsString(p.toString))
 
-  implicit val ValidationErrorWrites =
-    Writes[ValidationError] { e =>
+  implicit val JsonValidationErrorWrites =
+    Writes[JsonValidationError] { e =>
       JsString(s"${e.message}(${e.args.mkString(",")})")
     }
 
   implicit val jsonValidateErrorWrites = (
     (JsPath \ "path").write[JsPath] and
-    (JsPath \ "errors").write[Seq[ValidationError]]
+    (JsPath \ "errors").write[Seq[JsonValidationError]]
     tupled
   )
 
   def oneOf[M](values: Set[M])(implicit reads: Reads[M]) =
-    filter[M](ValidationError("error.oneOf",values))(values.contains)
+    filter[M](JsonValidationError("error.oneOf",values))(values.contains)
 
-  def respondWithErrors(errors: Seq[(JsPath, Seq[ValidationError])]) = {
+  def respondWithErrors(errors: Seq[(JsPath, Seq[JsonValidationError])]) = {
     Future.successful(BadRequest(Json.toJson(errors)))
   }
 }
